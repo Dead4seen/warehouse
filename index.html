@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Master Plan</title>
+    <!-- Links to the single, complete stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50">
+
+    <!-- New Sidebar Container -->
+    <div id="sidebar-container" class="fixed top-0 left-0 h-full bg-white shadow-lg z-50">
+        <!-- Sidebar content will be injected by script.js -->
+    </div>
+
+    <!-- Master Container (now offset for the sidebar) -->
+    <div id="master-container" class="transition-all duration-300">
+      <div class="w-full max-w-7xl mx-auto p-4 sm:p-8">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h1 id="main-title" class="text-2xl font-bold text-gray-800">Warehouse Site Plan</h1>
+            <p id="main-subtitle" class="text-sm text-gray-500">Project: Specialized Ceramic Products Warehouse</p>
+          </div>
+          <div class="flex items-center gap-3 p-1.5 rounded-lg">
+            <span id="toggle-label-site" class="text-sm font-semibold text-gray-800">Site Plan</span>
+            <button id="view-toggle-button" class="text-gray-400 focus:outline-none">
+                <!-- SVG icon will be injected by script.js -->
+            </button>
+            <span id="toggle-label-blueprint" class="text-sm font-semibold text-gray-500">Blueprint</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- View containers will be populated by script.js -->
+      <div id="friendly-view-container"></div>
+      <div id="blueprint-view-container" class="hidden"></div>
+      
+      <!-- Modal container -->
+      <div id="info-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <!-- Modal content is injected here by script.js -->
+      </div>
+    </div>
+
+    <!-- The project's logic -->
+    <script src="script.js"></script>
+</body>
+</html>
