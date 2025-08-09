@@ -1,9 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- DATA & CONSTANTS ---
+    // MODIFIED: Warehouse dimensions updated to 125m.
     const AREA_INFO = {
       warehouse: { title: "Warehouse Facility", icon: 'Building', specs: [{ label: "Dimensions", value: "125m (W) x 55m (D)" }, { label: "Total Area", value: "6,875 m²" }, { label: "Compliance", value: "Meets < 7,500m² requirement" },], features: ["Primary storage for heritage & contemporary collections.", "Designed for efficient racking and internal logistics flow."] },
-      docking: { title: "Docking Area & Truck Apron", icon: 'Truck', specs: [{ label: "Dimensions", value: "125m (W) x 35m (D)" }, { label: "Total Area", value: "4,375 m²" }, { label: "Pavement", value: "Reinforced Concrete (Mác 300, 250mm thick)" }, { label: "Drainage", value: "1-2% slope towards main road" },], features: ["Sole zone for all truck maneuvering and queuing.", "Primary North-face fire access lane.", "Individual reinforced landing gear pads (3m wide, 300mm thick) at each dock door."] },
+      docking: { title: "Docking Area & Truck Apron", icon: 'Truck', specs: [{ label: "Dimensions", value: "114m (W) x 35m (D)" }, { label: "Total Area", value: "3,990 m²" }, { label: "Pavement", value: "Reinforced Concrete (minimum grade C30, 250mm thick)" }, { label: "Drainage", value: "1-2% slope towards main road" },], features: ["Sole zone for all truck maneuvering and queuing.", "Primary North-face fire access lane.", "Individual reinforced landing gear pads (3m wide, 300mm thick) at each dock door."] },
       docksystems: { title: "Loading Dock Systems & Equipment", icon: 'Layers', specs: [{ label: "Total Bays", value: "8 (4 Inbound, 4 Outbound)" }, { label: "Door Type", value: "Insulated Steel Sectional (2.7m x 3.0m)" }, { label: "Leveler Type", "value": "Vertical Storing Hydraulic (18,000 kg cap.)" }, { label: "Shelter Type", value: "Inflatable Dock Shelters" }, { label: "Restraint System", value: "Rotating Hook Automatic (14,500 kg force)" }, { label: "Control System", value: "Integrated Interlocked Control Panel" },], features: ["Vertical storing levelers ensure a perfect environmental seal and superior cleanliness.", "Inflatable shelters accommodate a wide variety of truck sizes.", "Interlocked controls prevent accidental separation and ensure a safe operational sequence."] },
       garage: { title: "Garage & Parking", icon: 'ParkingCircle', specs: [{ label: "Dimensions", value: "10m (W) x 40m (D)" }, { label: "Total Area", value: "400 m²" }, { label: "Capacity", value: "5 Cars, 50 Motorbikes" },], features: ["Covered parking for motorbikes.", "2 dedicated EV charging stations.", "Clearly demarcated pedestrian and vehicle lanes."] },
       utility: { title: "Utility Compound", icon: 'ShieldCheck', specs: [{ label: "Dimensions", value: "10m (W) x 20m (D)" }, { label: "Total Area", value: "200 m²" }, { label: "Safety", "value": "Secured with perimeter fencing" },], features: ["Houses main electrical substation.", "Contains backup power generator.", "Location of fire water pump house and tank."] }
@@ -25,8 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
       Trees: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10v.2A3 3 0 0 1 8.9 16v0H5v0h0a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M7 16v6"/><path d="M13 19v3"/><path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5"/></svg>',
     };
   
-    const H = { westBuffer: 1/150*100, westBlock: 10/150*100, westFirelane: 8/150*100, mainBuilding: 125/150*100, eastFirelane: 5/150*100, eastBuffer: 1/150*100 };
-    const V = { topGap: 4/100*100, docking: 35/100*100, warehouse: 55/100*100, southLane: 6/100*100, garage: 40/100*100, utilityGap: 1/100*100, utility: 20/100*100, westTopGap: 36/100*100 };
+    // Layout constants
+    const H = {
+        westBuffer: 1/150*100, westBlock: 10/150*100,
+        westFirelaneWide: 12/150*100, westFirelaneNarrow: 8/150*100,
+        dockingWidth: 114/150*100, warehouseWidth: 125/150*100,
+        eastFirelaneWide: 12/150*100, eastFirelaneNarrow: 5/150*100,
+        eastBuffer: 1/150*100,
+    };
+    const V = { topGap: 4/100*100, docking: 35/100*100, warehouse: 55/100*100, southLane: 5/100*100, southBuffer: 1/100*100, garage: 40/100*100, utilityGap: 1/100*100, utility: 20/100*100, westTopGap: 36/100*100 };
+    
     const cameraPositions = [{ top: '3%', left: '11%' }, { top: '3%', right: '11%' }, { top: '38%', left: '19.5%' }, { top: '38%', right: '6.5%' }, { top: '94%', left: '19.5%' }, { top: '94%', right: '6.5%' }, { top: '50%', left: '5%' }];
     const lightPositions = [{ top: '15%', left: '30%' }, { top: '15%', left: '55%' }, { top: '15%', left: '80%' }, { top: '30%', left: '30%' }, { top: '30%', left: '55%' }, { top: '30%', left: '80%' }, { top: '60%', left: '5%' }, { top: '96%', left: '50%' }];
     const hydrantPositions = [{ top: '6%', left: '15.5%' }, { top: '6%', right: '8.5%' }, { bottom: '8%', left: '15.5%' }, { bottom: '8%', right: '8.5%' }];
@@ -49,55 +58,106 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const closeModal = () => { infoModal.innerHTML = ''; infoModal.classList.add('hidden'); };
     
-    // MODIFIED: Renders a clean, styled dimension line with notations.
     const getDimensionLineHTML = (options) => {
-        const { orientation, length, position, label, offset = '0', labelOffset = '0' } = options;
+        const { orientation = 'horizontal', length, position, label, offset = '0', labelOffset = '0', tickDirection = 'inward', tickLength = '8px' } = options;
 
         const lineContainerStyle = orientation === 'horizontal' 
             ? `height: 1px; width: ${length}; top: ${offset}; left: ${position};` 
             : `width: 1px; height: ${length}; left: ${offset}; top: ${position};`;
 
-        const tickStyle = orientation === 'horizontal' ? 'h-3 w-px' : 'w-3 h-px';
-
         const labelStyle = orientation === 'horizontal'
             ? `left: 50%; top: ${labelOffset}; transform: translate(-50%, -50%);`
             : `top: 50%; left: ${labelOffset}; transform: translate(-50%, -50%) rotate(-90deg);`;
+        
+        let startTickHTML = '', endTickHTML = '';
 
-        const startTickStyle = orientation === 'horizontal' ? `top: 50%; left: 0; transform: translateY(-50%);` : `top: 0; left: 50%; transform: translateX(-50%);`;
-        const endTickStyle = orientation === 'horizontal' ? `top: 50%; right: 0; transform: translateY(-50%);` : `bottom: 0; left: 50%; transform: translateX(-50%);`;
+        if (orientation === 'horizontal') {
+            const baseStyle = `absolute w-px bg-gray-400`;
+            let tickStyle = `height: ${tickLength};`;
+            if (tickDirection === 'inward') { tickStyle += ` top: 0;`; } 
+            else if (tickDirection === 'outward') { tickStyle += ` bottom: 0;`; } 
+            else { tickStyle += ` top: 50%; transform: translateY(-50%);`; }
+            startTickHTML = `<div class="${baseStyle}" style="${tickStyle} left: 0;"></div>`;
+            endTickHTML = `<div class="${baseStyle}" style="${tickStyle} right: 0;"></div>`;
+        } else { // Vertical
+            const baseStyle = `absolute h-px bg-gray-400`;
+            let startTickStyle, endTickStyle;
+            if (tickDirection === 'inward') {
+                startTickStyle = `width: ${tickLength}; right: 0;`;
+                endTickStyle = `width: ${tickLength}; right: 0;`;
+            } else if (tickDirection === 'outward') {
+                startTickStyle = `width: ${tickLength}; left: 0;`;
+                endTickStyle = `width: ${tickLength}; left: 0;`;
+            } else {
+                startTickStyle = `width: ${tickLength}; left: 50%; transform: translateX(-50%);`;
+                endTickStyle = `width: ${tickLength}; left: 50%; transform: translateX(-50%);`;
+            }
+            startTickHTML = `<div class="${baseStyle}" style="${startTickStyle} top: 0;"></div>`;
+            endTickHTML = `<div class="${baseStyle}" style="${endTickStyle} bottom: 0;"></div>`;
+        }
 
         return `
             <div style="${lineContainerStyle}" class="absolute">
                 <div class="absolute w-full h-full bg-gray-400"></div>
-                <div class="absolute ${tickStyle} bg-gray-400" style="${startTickStyle}"></div>
-                <div class="absolute ${tickStyle} bg-gray-400" style="${endTickStyle}"></div>
+                ${startTickHTML}
+                ${endTickHTML}
                 <span class="absolute text-[10px] font-mono px-1 text-gray-600" style="${labelStyle}">${label}</span>
             </div>
         `;
     };
-
-    // MODIFIED: Implements a full set of clear, blueprint-style dimensions.
+    
+    // Renders a full blueprint-style dimension layout.
     const getAllDimensionsHTML = () => {
+        const H_Pos = {
+            westBlock_start: H.westBuffer,
+            westFirelaneNarrow_start: H.westBuffer + H.westBlock,
+            westFirelaneWide_start: H.westBuffer + H.westBlock,
+            warehouse_start: H.westBuffer + H.westBlock + H.westFirelaneNarrow,
+            docking_start: H.westBuffer + H.westBlock + H.westFirelaneWide,
+            eastFirelaneNarrow_start: H.westBuffer + H.westBlock + H.westFirelaneNarrow + H.warehouseWidth,
+            eastBuffer_start: 100 - H.eastBuffer,
+        };
+        const V_Pos = {
+            docking_start: V.topGap,
+            warehouse_start: V.topGap + V.docking,
+            southLane_start: V.topGap + V.docking + V.warehouse,
+            southBuffer_start: V.topGap + V.docking + V.warehouse + V.southLane,
+            utility_start: V.westTopGap + V.garage + V.utilityGap,
+        };
+        const west_bottom_gap = 100 - V.westTopGap - V.garage - V.utilityGap - V.utility;
+
         const lines = [
-            // --- HORIZONTAL DIMENSIONS (TOP) ---
-            // Tier 1: Overall Width
-            getDimensionLineHTML({ orientation: "horizontal", length: "100%", position: "0%", label: "150m", offset: "-24px", labelOffset: "-6px" }),
-            // Tier 2: Main Segments
-            getDimensionLineHTML({ orientation: "horizontal", length: `calc(12/150*100%)`, position: "0%", label: "12m", offset: "-12px", labelOffset: "-6px" }),
-            getDimensionLineHTML({ orientation: "horizontal", length: `${H.mainBuilding}%`, position: `calc(12/150*100%)`, label: "125m", offset: "-12px", labelOffset: "-6px" }),
+            // --- HORIZONTAL DIMENSIONS (TOP - Overall & Breakdown) ---
+            getDimensionLineHTML({ orientation: "horizontal", length: "100%", position: "0%", label: "150m (Total Site Width)", offset: "-60px", labelOffset: "-8px" }),
+            getDimensionLineHTML({ orientation: "horizontal", length: `${H.westBuffer}%`, position: `0%`, label: "1m", offset: "-40px", labelOffset: "-8px" }),
+            getDimensionLineHTML({ orientation: "horizontal", length: `${H.westBlock}%`, position: `${H_Pos.westBlock_start}%`, label: "10m", offset: "-40px", labelOffset: "-8px" }),
+            getDimensionLineHTML({ orientation: "horizontal", length: `${H.westFirelaneWide}%`, position: `${H_Pos.westFirelaneWide_start}%`, label: "12m", offset: "-40px", labelOffset: "-8px" }),
+            getDimensionLineHTML({ orientation: "horizontal", length: `${H.dockingWidth}%`, position: `${H_Pos.docking_start}%`, label: "114m", offset: "-20px", labelOffset: "-8px" }),
+            getDimensionLineHTML({ orientation: "horizontal", length: `${H.eastFirelaneWide}%`, position: `${H_Pos.docking_start + H.dockingWidth}%`, label: "12m", offset: "-40px", labelOffset: "-8px" }),
+            getDimensionLineHTML({ orientation: "horizontal", length: `${H.eastBuffer}%`, position: `${100 - H.eastBuffer}%`, label: "1m", offset: "-40px", labelOffset: "-8px" }),
+
+            // --- HORIZONTAL DIMENSIONS (BOTTOM & INTERNAL) ---
+            getDimensionLineHTML({ orientation: "horizontal", length: `${H.warehouseWidth}%`, position: `${H_Pos.warehouse_start}%`, label: "125m (Warehouse Width)", offset: "calc(100% + 40px)", labelOffset: "8px", tickDirection:"outward" }),
+            getDimensionLineHTML({ orientation: "horizontal", length: `${H.eastFirelaneNarrow}%`, position: `${H_Pos.eastFirelaneNarrow_start}%`, label: "5m", offset: "calc(100% + 20px)", labelOffset: "8px", tickDirection: "outward" }),
             
-            // --- CENTRAL LINE (between gates) ---
-            getDimensionLineHTML({ orientation: "horizontal", length: `calc(126/150 * 100%)`, position: `calc(12/150*100%)`, label: "125m", offset: '2%', labelOffset: '12px' }),
+            // --- NEW: WIDTH BETWEEN GARAGE AND WAREHOUSE ---
+            getDimensionLineHTML({ orientation: "horizontal", length: `${H.westFirelaneNarrow}%`, position: `${H_Pos.westFirelaneNarrow_start}%`, label: "8m", offset: `calc(${V_Pos.warehouse_start}% + 25px)`, labelOffset: "8px", tickDirection: "outward" }),
 
             // --- VERTICAL DIMENSIONS (LEFT) ---
-            getDimensionLineHTML({ orientation: "vertical", length: `${V.westTopGap}%`, position: `0%`, label: "36m", offset: "-12px", labelOffset: "-6px" }),
-            getDimensionLineHTML({ orientation: "vertical", length: `${V.garage}%`, position: `${V.westTopGap}%`, label: "40m", offset: "-12px", labelOffset: "-6px" }),
-            
+            getDimensionLineHTML({ orientation: "vertical", length: "100%", position: `0%`, label: "100m", offset: `calc(${H.westBuffer}% - 80px)`, labelOffset: "-18px", tickDirection: "outward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${V.westTopGap}%`, position: `0%`, label: `36m`, offset: `calc(${H.westBuffer}% - 60px)`, labelOffset: "-18px", tickDirection: "outward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${V.garage}%`, position: `${V.westTopGap}%`, label: `40m (Garage)`, offset: `calc(${H.westBuffer}% - 40px)`, labelOffset: "-18px", tickDirection: "outward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${V.utilityGap}%`, position: `calc(${V.westTopGap}% + ${V.garage}%)`, label: `1m (Gap)`, offset: `calc(${H.westBuffer}% - 20px)`, labelOffset: "-18px", tickDirection: "outward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${V.utility}%`, position: `${V_Pos.utility_start}%`, label: `20m (Utility)`, offset: `calc(${H.westBuffer}% - 40px)`, labelOffset: "-18px", tickDirection: "outward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${west_bottom_gap}%`, position: `calc(100% - ${west_bottom_gap}%)`, label: `3m`, offset: `calc(${H.westBuffer}% - 60px)`, labelOffset: "-18px", tickDirection: "outward" }),
+
             // --- VERTICAL DIMENSIONS (RIGHT) ---
-            getDimensionLineHTML({ orientation: "vertical", length: `${V.topGap}%`, position: `0%`, label: "4m", offset: "calc(100% + 12px)", labelOffset: "6px" }),
-            getDimensionLineHTML({ orientation: "vertical", length: `${V.docking}%`, position: `${V.topGap}%`, label: "35m", offset: "calc(100% + 12px)", labelOffset: "6px" }),
-            getDimensionLineHTML({ orientation: "vertical", length: `${V.warehouse}%`, position: `${V.topGap + V.docking}%`, label: "55m", offset: "calc(100% + 12px)", labelOffset: "6px" }),
-            getDimensionLineHTML({ orientation: "vertical", length: `${V.southLane}%`, position: `${V.topGap + V.docking + V.warehouse}%`, label: "6m", offset: "calc(100% + 12px)", labelOffset: "6px" }),
+            getDimensionLineHTML({ orientation: "vertical", length: "100%", position: `0%`, label: "100m (Total Site Depth)", offset: "calc(100% + 40px)", labelOffset: "18px", tickDirection: "inward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${V.topGap}%`, position: '0%', label: "4m", offset: "calc(100% + 20px)", labelOffset: "18px", tickDirection: "inward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${V.docking}%`, position: `${V_Pos.docking_start}%`, label: "35m", offset: "calc(100% + 20px)", labelOffset: "18px", tickDirection: "inward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${V.warehouse}%`, position: `${V_Pos.warehouse_start}%`, label: "55m", offset: "calc(100% + 20px)", labelOffset: "18px", tickDirection: "inward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${V.southLane}%`, position: `${V_Pos.southLane_start}%`, label: "5m", offset: "calc(100% + 20px)", labelOffset: "18px", tickDirection: "inward" }),
+            getDimensionLineHTML({ orientation: "vertical", length: `${V.southBuffer}%`, position: `${V_Pos.southBuffer_start}%`, label: "1m", offset: "calc(100% + 20px)", labelOffset: "18px", tickDirection: "inward" }),
         ];
         return lines.join('');
     };
@@ -111,8 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const getDockBayHTML = (i) => {
         const totalBays = 8;
         const bayWidthPct = 3.5;
-        const wallStart = H.westBuffer + H.westBlock + H.westFirelane;
-        const wallWidth = H.mainBuilding;
+        const wallStart = H.westBuffer + H.westBlock + H.westFirelaneWide;
+        const wallWidth = H.dockingWidth;
         const totalBayWidth = bayWidthPct * totalBays;
         const totalGaps = totalBays + 1;
         const gapPct = (wallWidth - totalBayWidth) / totalGaps;
@@ -124,23 +184,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const getTrafficFlowHTML = () => {
         const arrow = (style, rotationClass = '') => `<div class="absolute text-gray-600 opacity-80 ${rotationClass}" style="${style}">${ICONS.ArrowRight.replace('<svg', '<svg class="w-6 h-6"')}</div>`;
         return [
-            // Entry flow
             arrow('top: 8%; left: 10%; transform: rotate(90deg);'),
             arrow('top: 20%; left: 10%; transform: rotate(90deg);'),
-            // Apron flow (left to right)
             arrow('top: 25%; left: 20%;'),
             arrow('top: 25%; left: 35%;'),
             arrow('top: 25%; left: 58%;'),
             arrow('top: 25%; left: 82%;'),
-            // Inbound docking maneuvers
             arrow('top: 32%; left: 30%; transform: rotate(90deg);'),
             arrow('top: 32%; left: 40%; transform: rotate(90deg);'),
-            // Outbound docking maneuvers
             arrow('top: 32%; left: 65%; transform: rotate(90deg);'),
             arrow('top: 32%; left: 75%; transform: rotate(90deg);'),
-            // Exit flow
-            arrow('top: 18%; left: 88%; transform: rotate(-90deg);'),
-            arrow('top: 6%; left: 88%; transform: rotate(-90deg);'),
+            arrow('top: 18%; left: 95%; transform: rotate(-90deg);'),
+            arrow('top: 6%; left: 95%; transform: rotate(-90deg);'),
         ].join('');
     };
     
@@ -181,18 +236,40 @@ document.addEventListener('DOMContentLoaded', () => {
     };
       
     const renderSitePlan = () => {
+        const pos = {
+            west_firelane_start: H.westBuffer + H.westBlock,
+            docking_start: H.westBuffer + H.westBlock + H.westFirelaneWide,
+            warehouse_start: H.westBuffer + H.westBlock + H.westFirelaneNarrow,
+            east_firelane_wide_start: H.westBuffer + H.westBlock + H.westFirelaneWide + H.dockingWidth,
+            east_firelane_narrow_start: 100 - H.eastBuffer - H.eastFirelaneNarrow,
+            south_lane_top: V.topGap + V.docking + V.warehouse,
+        };
+
         friendlyViewContainer.innerHTML = `
-            <div class="w-full bg-gray-50 pt-4 sm:pt-8 flex flex-col items-center font-sans">
-                <div class="w-full max-w-7xl mx-auto px-4 sm:px-8">
-                    <div id="sitemap" class="w-full aspect-[150/100] relative border-2 border-gray-300 bg-white">
-                        <div class="absolute top-0 left-0 h-full bg-green-100" style="width: ${H.westBuffer}%"></div><div class="absolute top-0 right-0 h-full bg-green-100" style="width: ${H.eastBuffer}%"></div><div class="absolute bottom-0 left-0 w-full bg-green-100" style="height: calc(1/6 * ${V.southLane}%)"></div>
-                        <div class="absolute bottom-1 left-2 w-5 h-5 text-green-600 opacity-70">${ICONS.Trees}</div><div class="absolute bottom-1 right-2 w-5 h-5 text-green-600 opacity-70">${ICONS.Trees}</div>
-                        <div data-area="docking" class="absolute bg-gray-200 cursor-pointer" style="top: ${V.topGap}%; left: ${H.westBuffer + H.westBlock + H.westFirelane}%; width: ${H.mainBuilding}%; height: ${V.docking}%"><span class="absolute top-[15%] left-1/2 -translate-x-1/2 text-gray-500 font-semibold text-sm">Truck Apron & Maneuvering Area</span><div class="absolute top-1/2 left-1/4 -translate-y-1/2 text-center"><p class="font-bold text-gray-600">Inbound Docks (D1-D4)</p></div><div class="absolute top-1/2 right-1/4 -translate-y-1/2 text-center"><p class="font-bold text-gray-600">Outbound Docks (D5-D8)</p></div></div>
-                        <div data-area="warehouse" class="absolute bg-blue-100 border-t-2 border-gray-400 cursor-pointer" style="top: ${V.topGap + V.docking}%; left: ${H.westBuffer + H.westBlock + H.westFirelane}%; width: ${H.mainBuilding}%; height: ${V.warehouse}%"><div class="absolute center-text text-center"><div class="w-8 h-8 mx-auto mb-2 text-blue-800">${ICONS.Building}</div><span class="text-blue-800 font-bold text-lg">Warehouse</span></div></div>
+            <div class="w-full bg-gray-50 pt-16 pb-12 flex flex-col items-center font-sans">
+                <div class="w-full max-w-7xl mx-auto px-10">
+                    <div id="sitemap" class="w-full aspect-[150/100] relative border-2 border-gray-300 bg-white" style="margin-top: 2rem;">
+                        <div class="absolute top-0 left-0 h-full bg-green-100" style="width: ${H.westBuffer}%"></div>
+                        <div class="absolute top-0 right-0 h-full bg-green-100" style="width: ${H.eastBuffer}%"></div>
+                        <div class="absolute bottom-0 left-0 w-full bg-green-100" style="height: ${V.southBuffer}%"></div>
+                        
+                        <div data-area="docking" class="absolute bg-gray-200 cursor-pointer" style="top: ${V.topGap}%; left: ${pos.docking_start}%; width: ${H.dockingWidth}%; height: ${V.docking}%"><span class="absolute top-[15%] left-1/2 -translate-x-1/2 text-gray-500 font-semibold text-sm">Truck Apron & Maneuvering Area</span><div class="absolute top-1/2 left-1/4 -translate-y-1/2 text-center"><p class="font-bold text-gray-600">Inbound Docks (D1-D4)</p></div><div class="absolute top-1/2 right-1/4 -translate-y-1/2 text-center"><p class="font-bold text-gray-600">Outbound Docks (D5-D8)</p></div></div>
+                        <div data-area="warehouse" class="absolute bg-blue-100 border-t-2 border-gray-400 cursor-pointer" style="top: calc(${V.topGap}% + ${V.docking}%); left: ${pos.warehouse_start}%; width: ${H.warehouseWidth}%; height: ${V.warehouse}%"><div class="absolute center-text text-center"><div class="w-8 h-8 mx-auto mb-2 text-blue-800">${ICONS.Building}</div><span class="text-blue-800 font-bold text-lg">Warehouse</span></div></div>
+                        
                         <div data-area="garage" class="absolute bg-gray-100 cursor-pointer" style="top: ${V.westTopGap}%; left: ${H.westBuffer}%; width: ${H.westBlock}%; height: ${V.garage}%"><div class="absolute center-text text-center"><div class="w-6 h-6 mx-auto mb-1 text-gray-700">${ICONS.ParkingCircle}</div><span class="text-gray-700 font-semibold text-xs">Garage</span></div></div>
                         <div data-area="utility" class="absolute bg-yellow-100 cursor-pointer" style="top: ${V.westTopGap + V.garage + V.utilityGap}%; left: ${H.westBuffer}%; width: ${H.westBlock}%; height: ${V.utility}%"><div class="absolute center-text text-center"><div class="w-6 h-6 mx-auto mb-1 text-yellow-800">${ICONS.ShieldCheck}</div><span class="text-yellow-800 font-semibold text-xs">Utility</span></div></div>
-                        <div class="absolute bg-orange-100" style="top: 0%; left: ${H.westBuffer + H.westBlock}%; width: ${H.westFirelane}%; height: 100%;"></div><div class="absolute bg-orange-100 rounded-br-lg" style="top: 0%; left: ${H.westBuffer + H.westBlock + H.westFirelane + H.mainBuilding}%; width: ${H.eastFirelane}%; height: calc(100% - ${V.southLane}%);"></div><div class="absolute bg-orange-100" style="top: calc(100% - ${V.southLane}%); left: ${H.westBuffer + H.westBlock}%; width: calc(${H.westFirelane}% + ${H.mainBuilding}% + ${H.eastFirelane}%); height: calc(5/6 * ${V.southLane}%);"></div>
-                        <div class="absolute top-0 h-[4%] bg-green-200 border border-green-400 flex items-center justify-center" style="left: calc(12/150*100%); width: calc(8/150*100%);"><span class="text-xs font-bold text-green-800">GATE IN</span></div><div class="absolute top-0 h-[4%] bg-red-200 border border-red-400 flex items-center justify-center" style="right: calc(12/150*100%); width: calc(12/150*100%);"><span class="text-xs font-bold text-red-800">GATE OUT</span></div>
+                        
+                        <div class="absolute bg-orange-100" style="top: 0; left: ${pos.west_firelane_start}%; width: ${H.westFirelaneWide}%; height: calc(${V.topGap}% + ${V.docking}%);"></div>
+                        <div class="absolute bg-orange-100" style="top: calc(${V.topGap}% + ${V.docking}%); left: ${pos.west_firelane_start}%; width: ${H.westFirelaneNarrow}%; height: calc(100% - ${V.topGap}% - ${V.docking}%);"></div>
+                        
+                        <div class="absolute bg-orange-100" style="top: 0; left: ${pos.east_firelane_wide_start}%; width: ${H.eastFirelaneWide}%; height: calc(${V.topGap}% + ${V.docking}%);"></div>
+                        <div class="absolute bg-orange-100" style="top: calc(${V.topGap}% + ${V.docking}%); left: ${pos.east_firelane_narrow_start}%; width: ${H.eastFirelaneNarrow}%; height: calc(100% - ${V.topGap}% - ${V.docking}% - ${V.southLane}% - ${V.southBuffer}%); border-bottom-right-radius: 0.5rem;"></div>
+
+                        <div class="absolute bg-orange-100" style="top: ${pos.south_lane_top}%; left: ${pos.west_firelane_start}%; width: calc(100% - ${pos.west_firelane_start}% - ${H.eastBuffer}%); height: ${V.southLane}%;"></div>
+
+                        <div class="absolute top-0 h-[4%] bg-green-200 border border-green-400 flex items-center justify-center" style="left: ${pos.west_firelane_start}%; width: ${H.westFirelaneWide}%;"><span class="text-xs font-bold text-green-800">GATE IN</span></div>
+                        <div class="absolute top-0 h-[4%] bg-red-200 border border-red-400 flex items-center justify-center" style="left: ${pos.east_firelane_wide_start}%; width: ${H.eastFirelaneWide}%;"><span class="text-xs font-bold text-red-800">GATE OUT</span></div>
+                        
                         ${[...Array(8)].map((_, i) => getDockBayHTML(i)).join('')}
                         <div id="sitemap-dimensions-layer"></div>
                         <div id="sitemap-traffic-layer"></div>
